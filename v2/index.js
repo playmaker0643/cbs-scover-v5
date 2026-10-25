@@ -1,4 +1,3 @@
-import readline from 'readline'
 import fs from 'fs'
 import path from 'path'
 import http from 'http'
@@ -11,6 +10,12 @@ import { smsg, makeWASocket, bind, sendNotification, getGroupMetadata } from './
 import { suppressSignalLogs } from './lib/filter.js'
 import './config.js'
 import menuButtons from '../lib/menu-buttons.js'
+
+const BOT_PHONE_NUMBER = process.env.BOT_PHONE_NUMBER;
+
+if (BOT_PHONE_NUMBER === undefined || BOT_PHONE_NUMBER === null) {
+    throw new Error('FATAL: BOT_PHONE_NUMBER environment variable is missing. Check your deployment environment settings.')
+}
 
 suppressSignalLogs()
 
@@ -386,13 +391,6 @@ export default async function handleMessage(EliteProTech, m) {
     }
 }
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
-
-const question = text => new Promise(resolve => rl.question(text, resolve))
-
 let EliteProTech
 let reconnectTimer = null
 let pluginsLoaded = false
@@ -459,16 +457,12 @@ async function start() {
         bind(EliteProTech)
 
         if (!state.creds.registered) {
-            console.log('Enter the phone number example: 234x');
-            const number = await question('Sending Code to : ');
             try {
-                const code = await EliteProTech.requestPairingCode(number);
+                const code = await EliteProTech.requestPairingCode(BOT_PHONE_NUMBER);
                 console.log(`PAIRING CODE: ${code}`);
             } catch (err) {
                 console.error('Failed to send pairing code:', err.message);
                 process.exit(1);
-            } finally {
-                rl.close();
             }
         }
 
@@ -553,11 +547,11 @@ const isStandalone = import.meta.url === pathToFileURL(process.argv[1] || '').hr
 
 /* When V2 runs inside the V1 process they share one HTTP server, so only bind
    the port when V2 is started on its own. */
-if (isStandalone) {
-    server.listen(PORT, () => {
-        console.log(chalk.greenBright(`[SERVER] Listening on port ${PORT}`))
-    })
-}
+// if (isStandalone) {
+//     server.listen(PORT, () => {
+//         console.log(chalk.greenBright(`[SERVER] Listening on port ${PORT}`))
+//     })
+// }
 
 process.on('SIGINT', async () => {
     try {
