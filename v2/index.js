@@ -457,13 +457,8 @@ async function start() {
         bind(EliteProTech)
 
         if (!state.creds.registered) {
-            try {
-                const code = await EliteProTech.requestPairingCode(BOT_PHONE_NUMBER);
-                console.log(`PAIRING CODE: ${code}`);
-            } catch (err) {
-                console.error('Failed to send pairing code:', err.message);
-                process.exit(1);
-            }
+            const code = await EliteProTech.requestPairingCode(BOT_PHONE_NUMBER);
+            console.log(`PAIRING CODE: ${code}`);
         }
 
         EliteProTech.ev.on('creds.update', saveCreds)
